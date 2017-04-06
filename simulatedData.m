@@ -102,11 +102,24 @@ simimu.sampfreq = samplefreq;
 simimu.gyronoisestd = gyro.noisestd;
 simimu.gyrobiasdriftstd = gyro.biasstd;
 simimu.accnoisestd = accel.noisestd;
-figure('Name','Simulated Sensor Data')
+
+f2 = figure('Name','Gyro Error');          %New fig
+set(f2, 'Position', [500, 100, 1049, 895]);
+
+% Plot Gyro Error
+plot(time, (rad2deg(Omega_Sensor) - rad2deg(transpose(simimu.gyro))));
+title('(Ideal Gyroscope Readings) - (Simulated Readings)');
+legend('Sensor X', 'Sensor Y', 'Sensor Z')
+xlabel('time (seconds)'); ylabel('degrees/sec');
+
+
+f = figure('Name','Simulated Sensor Data'); %New fig
+set(f, 'Position', [100, 100, 1049, 895]);
+
 % Plot Gyroscope
 subplot(2,2,1)
 plot(time, rad2deg(Omega_Sensor));
-title('Ideal Gyroscope readings');
+title('Ideal Gyroscope Readings');
 legend('Sensor X', 'Sensor Y', 'Sensor Z')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 gylim1 = get(gca,'ylim');
@@ -139,6 +152,18 @@ set(gca,'ylim',aylim);
 subplot(2,2,3)
 set(gca,'ylim',aylim);
 
+
+% gylim1 = get(gca,'ylim');
+% subplot(2,2,2)
+% plot(time, rad2deg(simimu.gyro));
+% title('Simulated Gyroscope with drift');
+% legend('Sensor X', 'Sensor Y', 'Sensor Z')
+% xlabel('time (seconds)'); ylabel('degrees/sec');
+% gylim2 = get(gca,'ylim');
+% gylim = [min([gylim1(1),gylim2(1)]), max(gylim1(2), gylim2(2))];
+% set(gca,'ylim',gylim);
+% subplot(2,2,1)
+% set(gca,'ylim',gylim);
 end
 
 function [Omega_Sensor, Alpha_Sensor] = ...
