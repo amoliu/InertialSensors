@@ -151,19 +151,6 @@ aylim =[min([aylim1(1),aylim2(1)]), max(aylim1(2), aylim2(2))];
 set(gca,'ylim',aylim);
 subplot(2,2,3)
 set(gca,'ylim',aylim);
-
-
-% gylim1 = get(gca,'ylim');
-% subplot(2,2,2)
-% plot(time, rad2deg(simimu.gyro));
-% title('Simulated Gyroscope with drift');
-% legend('Sensor X', 'Sensor Y', 'Sensor Z')
-% xlabel('time (seconds)'); ylabel('degrees/sec');
-% gylim2 = get(gca,'ylim');
-% gylim = [min([gylim1(1),gylim2(1)]), max(gylim1(2), gylim2(2))];
-% set(gca,'ylim',gylim);
-% subplot(2,2,1)
-% set(gca,'ylim',gylim);
 end
 
 function [Omega_Sensor, Alpha_Sensor] = ...
