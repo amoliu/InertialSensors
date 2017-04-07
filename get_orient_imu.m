@@ -5,20 +5,20 @@ opt.gyrooffset = [-16 -8];
 opt.gyroband = [0.1 10];
 opt.getoffset = true;
 
-opt = parsevarargin(opt,varargin,2);
+% opt = parsevarargin(opt,varargin,2);
 
 imu.rate = 1/mean(diff(imu.t));
 
 %ideally we want a bandpass, but matlab doesn't do well with very
 %low cutoffs, so we do a running mean type operation to get rid of
 %the very low frequencies
-if (opt.gyroband(1) > 0)
-    gyrolo = get_low_baseline(imu.t, imu.gyro, opt.gyroband(1));
-    
-    gyros = imu.gyro - gyrolo;
-else
-    gyros = imu.gyro;
-end
+% % % % % if (opt.gyroband(1) > 0)
+% % % % %     gyrolo = get_low_baseline(imu.t, imu.gyro, opt.gyroband(1));
+% % % % %     
+% % % % %     gyros = imu.gyro - gyrolo;
+% % % % % else
+gyros = imu.gyro;
+% % % % % end
 %and then a low pass filter to get rid of the high frequencies
 [b,a] = butter(5,opt.gyroband(2)/(imu.rate/2), 'low');
 gyros = filtfilt(b,a, gyros);
