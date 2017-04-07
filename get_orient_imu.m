@@ -65,13 +65,17 @@ if opt.getoffset
     %try to get pitch angle
     orienta(:,2) = -(pi + unwrap(atan2(acclo(:,1),acclo(:,3)))) * 180/pi;
     if (any(abs(orienta(:,2)) > 345))
-        orienta(:,2) = orienta(:,2) - sign(first(orienta(:,2),isfinite(orienta(:,2))))*360;
+%         orienta(:,2) = orienta(:,2) - sign(first(orienta(:,2),isfinite(orienta(:,2))))*360;
     end
     
     %now try to eyeball the gyro offset so that it matches the initial
     %accelerometer orientation estimates
     off = [0 0];
     done = false;
+    
+    f = figure('Name','Gyro Error');          %New fig
+    set(f, 'Position', [800, 100, 1049, 895]);
+    
     plot(imu.t, orient(:,1:2) - repmat(off,[size(orient,1) 1]));
     addplot(imu.t, orienta, '--');
 
@@ -84,7 +88,7 @@ if opt.getoffset
         addplot(imu.t, orienta, '--');
         legend('Gyro x','Gyro y','Acc x','Acc y');
         
-        done = inputyn('OK? ','default',true);
+        done = inputyn('OK? ');
     end 
 else
     off = opt.gyrooffset;
