@@ -108,7 +108,7 @@ set(f2, 'Position', [500, 100, 1049, 895]);
 
 % Plot Gyro Error
 plot(time, (rad2deg(Omega_Sensor) - rad2deg(transpose(simimu.gyro))));
-title('(Ideal Gyroscope Readings) - (Simulated Readings)');
+title('Gyro Error: (Ideal Gyroscope Readings) - (Simulated Readings)');
 legend('Sensor X', 'Sensor Y', 'Sensor Z')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
