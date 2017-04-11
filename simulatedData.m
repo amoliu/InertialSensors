@@ -40,7 +40,7 @@ pitch.angle     = zeros(size(time));
 pitch.rate      = zeros(size(time));
 pitch.rateofrate = zeros(size(time));
 
-yaw.amplitude   = deg2rad(20);
+yaw.amplitude   = 0; %deg2rad(20);
 yaw.phase       = deg2rad(40);
 yaw.freq        = freq;
 yaw.angle       = yaw.amplitude*sin(2*pi*yaw.freq*time + yaw.phase);
