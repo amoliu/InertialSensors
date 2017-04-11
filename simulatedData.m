@@ -28,7 +28,7 @@ simimu.Qacc     = (accel.noisestd)^2*eye(3);
 simimu.Qbias    = (gyro.biasstd)^2*eye(3);
 simimu.Qacc     = 0.1*eye(3);
 
-roll.amplitude  = deg2rad(10);
+roll.amplitude  = deg2rad(10); %removed roll
 roll.phase      = deg2rad(25);
 roll.freq       = freq;
 roll.angle      = roll.amplitude*sin(2*pi*roll.freq*time + roll.phase);
@@ -48,7 +48,6 @@ yaw.rate        = 2*pi*yaw.freq*yaw.amplitude*cos(2*pi*yaw.freq*time + yaw.phase
 yaw.rateofrate  = -(2*pi*yaw.freq)^2*yaw.angle;
 
 
-% 
 roll.angle      = [zeros(1,calibmillisecs), roll.angle];
 pitch.angle     = [zeros(1,calibmillisecs), pitch.angle];
 yaw.angle       = [zeros(1,calibmillisecs), yaw.angle];
