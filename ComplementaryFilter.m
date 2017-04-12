@@ -23,6 +23,9 @@ function [results] = ComplementaryFilter(simimu,varargin)
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
     % Method
+yaw = 0;
+yawAcc = atan(simimu.acc(2)) * 180 / pi;
+yaw = yaw * 0.98 + yawAcc * 0.02;
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         % infinite loop
         % vary gamma
@@ -31,8 +34,8 @@ f = figure('Name','Pitch vs. Time'); %New fig
 set(f, 'Position', [100, 100, 1049, 895]);
 
 plot(time, rad2deg(simimu.gyro));
-title('Simulated Gyro Readings');
-legend('Sensor X', 'Sensor Y', 'Sensor Z')
+title('Simulated Gyroscope with drift');
+legend('Roll Sensor', 'Pitch Sensor', 'Yaw Sensor')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
 
