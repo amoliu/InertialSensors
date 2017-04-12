@@ -28,7 +28,7 @@ simimu.Qacc     = (accel.noisestd)^2*eye(3);
 simimu.Qbias    = (gyro.biasstd)^2*eye(3);
 simimu.Qacc     = 0.1*eye(3);
 
-roll.amplitude  = deg2rad(10);
+roll.amplitude  = 0; %deg2rad(10); % removed roll to look at 1 dim. (yaw)
 roll.phase      = deg2rad(25);
 roll.freq       = freq;
 roll.angle      = roll.amplitude*sin(2*pi*roll.freq*time + roll.phase);
@@ -108,7 +108,7 @@ set(f2, 'Position', [500, 100, 1049, 895]);
 % Plot Gyro Error
 plot(time, (rad2deg(Omega_Sensor) - rad2deg(transpose(simimu.gyro))));
 title('Gyro Error: (Ideal Gyroscope Readings) - (Simulated Readings)');
-legend('Yaw Sensor', 'Pitch Sensor', 'Roll Sensor')
+legend('Roll Sensor', 'Pitch Sensor', 'Yaw Sensor')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
 
@@ -119,13 +119,13 @@ set(f, 'Position', [100, 100, 1049, 895]);
 subplot(2,2,1)
 plot(time, rad2deg(Omega_Sensor));
 title('Ideal Gyroscope Readings');
-legend('Yaw Sensor', 'Pitch Sensor', 'Roll Sensor')
+legend('Roll Sensor', 'Pitch Sensor', 'Yaw Sensor')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 gylim1 = get(gca,'ylim');
 subplot(2,2,2)
 plot(time, rad2deg(simimu.gyro));
 title('Simulated Gyroscope with drift');
-legend('Yaw Sensor', 'Pitch Sensor', 'Roll Sensor')
+legend('Roll Sensor', 'Pitch Sensor', 'Yaw Sensor')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 gylim2 = get(gca,'ylim');
 gylim = [min([gylim1(1),gylim2(1)]), max(gylim1(2), gylim2(2))];
