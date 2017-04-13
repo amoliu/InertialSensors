@@ -28,7 +28,7 @@ simimu.Qacc     = (accel.noisestd)^2*eye(3);
 simimu.Qbias    = (gyro.biasstd)^2*eye(3);
 simimu.Qacc     = 0.1*eye(3);
 
-roll.amplitude  = 0; %deg2rad(10); % removed roll to look at 1 dim. (yaw)
+roll.amplitude  = deg2rad(10); % removed roll to look at 1 dim. (yaw)
 roll.phase      = deg2rad(25);
 roll.freq       = freq;
 roll.angle      = roll.amplitude*sin(2*pi*roll.freq*time + roll.phase);
@@ -79,6 +79,8 @@ simimu.dynaccGlobal = Accel_CoM_Inertial;
 Accel_CoM_Inertial  = Accel_CoM_Inertial + repmat([0 0 -1]',1, length(Accel_CoM_Inertial));
 Accel_CoM_Sensor    = inertial2sensor(Accel_CoM_Inertial, roll.angle, pitch.angle, yaw.angle);
 Accel_P     = getAcceleration(Accel_CoM_Sensor, rOP, Omega_Sensor, Alpha_Sensor);
+
+simimu.truegyro = transpose(Omega_Sensor);
 
 % Adding noise
 % gyro.sigma = (gyro.noisevar)*eye(3,3); R = (chol(gyro.sigma));
