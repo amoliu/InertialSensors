@@ -28,18 +28,19 @@ time = simimu.t;
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
         % vary gamma
-gamma = .1;
-yaw = zeros(size(time));
-yawGyro = 0;
+gamma = .01;
+pitch = zeros(size(time));
+pitchGyro = 0;
 
 for ii = 1:size(time)
-    yawGyro = yawGyro + simimu.gyro(ii, 3) * simimu.sampfreq; % current angle + rate * dt
+    pitchGyro = pitchGyro + simimu.gyro(ii, 2) * simimu.sampfreq; % current angle + rate * dt
     
     if abs(simimu.acc(ii, 2)) < .1  % y acc threshhold
-        yaw(ii) = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) ) * gamma + yawGyro * (1-gamma);
-        yawGyro = yaw(ii);
+        angle = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
+        pitch(ii) = angle.pitch * gamma + pitchGyro * (1-gamma);
+        pitchGyro = pitch(ii);
     else
-        yaw(ii) = yawGyro;
+        pitch(ii) = pitchGyro;
     end
 end
     % Plot
@@ -47,26 +48,26 @@ f = figure('Name','Pitch vs. Time'); %New fig
 set(f, 'Position', [100, 100, 1049, 895]);
 
 subplot(2,2,1);
-plot(time, rad2deg(simimu.truegyro(:,3)));
-title('Yaw');
+plot(time, rad2deg(simimu.truegyro(:,2)));
+title('Pitch');
 legend('IMU Data')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
 subplot(2,2,2);
-plot(time, (rad2deg(simimu.truegyro(:,3)) - rad2deg(simimu.gyro(:,3))));
-title('Yaw Gyro Error');
+plot(time, (rad2deg(simimu.truegyro(:,2)) - rad2deg(simimu.gyro(:,2))));
+title('Pitch Gyro Error');
 legend('Error')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
 subplot(2,2,3);
-plot(time, rad2deg(yaw));
-title('Complementary Filter Yaw');
+plot(time, rad2deg(pitch));
+title('Complementary Filter Pitch');
 legend('Complementary Filter')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
 subplot(2,2,4);
-plot(time, (rad2deg(simimu.truegyro(:,3)) - rad2deg(yaw)));
-title('Complementary Filter Yaw Gyro Error');
+plot(time, (rad2deg(simimu.truegyro(:,2)) - rad2deg(pitch)));
+title('Complementary Filter Pitch Gyro Error');
 legend('Error')
 xlabel('time (seconds)'); ylabel('degrees/sec');
 
@@ -79,9 +80,7 @@ end
 
 end
 
-function yAngle = accToAngle(ax, ay, az)
-% Just for yAngle now
-   yAngle = atan( ay / (ax^2 + az^2)^.5) * 180 / pi;
-%    yAngle = atan( ax + az) * 180 / pi;
-
+function [angle] = accToAngle(ax, ay, az)
+    angle.pitch = atan2((- ax) , sqrt(ay * ay + az * az)) * 180 / pi;
+    angle.roll = atan2(ay , az) * 180 / pi;
 end
