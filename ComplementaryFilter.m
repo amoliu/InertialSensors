@@ -28,17 +28,14 @@ time = simimu.t;
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
         % vary gamma
-gamma = .01;
+gamma = .1; % .1
 pitch = zeros(size(time));
-pitchGyro = 0;
 
 for ii = 1:size(time)
-    pitchGyro = pitchGyro + simimu.gyro(ii, 2) * simimu.sampfreq; % current angle + rate * dt
-    
+    pitchGyro = cumtrapz( simimu.gyro(ii, 2)) * simimu.sampfreq; % integrate
     if abs(simimu.acc(ii, 2)) < .1  % y acc threshhold
-        angle = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
-        pitch(ii) = angle.pitch * gamma + pitchGyro * (1-gamma);
-        pitchGyro = pitch(ii);
+        pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) ); 
+        pitch(ii) = pitchAcc.pitch * gamma + pitchGyro * (1-gamma);
     else
         pitch(ii) = pitchGyro;
     end
@@ -48,28 +45,28 @@ f = figure('Name','Pitch vs. Time'); %New fig
 set(f, 'Position', [100, 100, 1049, 895]);
 
 subplot(2,2,1);
-plot(time, rad2deg(simimu.truegyro(:,2)));
+plot(time,  cumtrapz(rad2deg(simimu.gyro(:,2))) * simimu.sampfreq); % integral of omega     vel = cumtrapz(acc) * dT + v0
 title('Pitch');
 legend('IMU Data')
-xlabel('time (seconds)'); ylabel('degrees/sec');
+xlabel('time (seconds)'); ylabel('degrees');
 
 subplot(2,2,2);
-plot(time, (rad2deg(simimu.truegyro(:,2)) - rad2deg(simimu.gyro(:,2))));
-title('Pitch Gyro Error');
+plot(time, abs(cumtrapz(rad2deg(simimu.truegyro(:,2)) - rad2deg(simimu.gyro(:,2))) * simimu.sampfreq));
+title('Pitch Gyro Error (abs. val.)');
 legend('Error')
-xlabel('time (seconds)'); ylabel('degrees/sec');
+xlabel('time (seconds)'); ylabel('degrees');
 
 subplot(2,2,3);
-plot(time, rad2deg(pitch));
+plot(time, sgolayfilt(rad2deg(pitch),1,5));
 title('Complementary Filter Pitch');
 legend('Complementary Filter')
-xlabel('time (seconds)'); ylabel('degrees/sec');
+xlabel('time (seconds)'); ylabel('degrees');
 
 subplot(2,2,4);
-plot(time, (rad2deg(simimu.truegyro(:,2)) - rad2deg(pitch)));
-title('Complementary Filter Pitch Gyro Error');
+plot(time, abs(cumtrapz(rad2deg(simimu.truegyro(:,2))) * simimu.sampfreq - rad2deg(pitch)));
+title('Complementary Filter Pitch Error (abs. val.)');
 legend('Error')
-xlabel('time (seconds)'); ylabel('degrees/sec');
+xlabel('time (seconds)'); ylabel('degrees');
 
 
 if(not(isempty(varargin)))
@@ -81,6 +78,7 @@ end
 end
 
 function [angle] = accToAngle(ax, ay, az)
-    angle.pitch = atan2((- ax) , sqrt(ay * ay + az * az)) * 180 / pi;
+%     angle.pitch = atan2(ay ,az) * 180 / pi;     % pitchAcc = atan2f((float)accData[1], (float)accData[2]) * 180 / M_PI;
+    angle.pitch = atan2((- ax) , sqrt(ay * ay + az * az)) * 180 / pi;     % pitch = (atan2(fXg, sqrt(fYg*fYg + fZg*fZg))*180.0)/M_PI;
     angle.roll = atan2(ay , az) * 180 / pi;
 end
