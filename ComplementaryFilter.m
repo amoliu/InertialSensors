@@ -23,23 +23,28 @@ function [simimu] = ComplementaryFilter(simimu,varargin)
     % Setup
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
-simimu.acc = simimu.acc * 9.81;
+window =2001;
+simimu.acc = movmean(simimu.acc * 9.81, window);
+
     % Method
         % for each time step, calculate yaw
             % if a is above a threshold, use gyro data
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
         % vary gamma
-gamma = .02; % .02
+gamma = .6; % .02
 pitch = zeros(size(time));
+pitchAccM = zeros(size(time));
 
 for ii = 1:size(time)
     pitchGyro =  simimu.gyro(ii, 2) * simimu.sampfreq; % integrate
     if abs(simimu.acc(ii, 2)) < .981  % y acc threshhold
         pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) ); 
         pitch(ii) = pitchAcc.pitch * gamma + pitchGyro * (1-gamma);
+        pitchAccM(ii) = pitchAcc.pitch;
     else
         pitch(ii) = pitchGyro;
+        pitchAccM(ii) = 0;
     end
 end
     % Plot
@@ -81,6 +86,7 @@ end
 
 function [angle] = accToAngle(ax, ay, az)
 %     angle.pitch = atan(-ax/az);     % pitchAcc = atan2f((float)accData[1], (float)accData[2]) * 180 / M_PI;
-    angle.pitch = atan(-ax/az); %angle.pitch = atan(ax/sqrt(ay * ay + az * az)); % float pitch = atan(xAxis/sqrt(pow(yAxis,2) + pow(zAxis,2)));
+    angle.pitch = atan(ax/sqrt(ay * ay + (az) * (az))); % float pitch = atan(xAxis/sqrt(pow(yAxis,2) + pow(zAxis,2)));
+%     angle.pitch = asin(ax/sqrt(ax * ax + az * az));
     angle.roll = atan2(ay , az);
 end
