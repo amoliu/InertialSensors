@@ -6,7 +6,7 @@
 % Instructions: A call would look like:
 %   ComplementaryFilter(simulatedData(5,1)) where the 1 is to close plots
 
-function [simimu] = ComplementaryFilter(simimu,varargin)
+function gamma = ComplementaryFilter(simimu,varargin)
 % simimu.Qgyro
 % simimu.Qacc
 % simimu.Qbias
@@ -19,12 +19,14 @@ function [simimu] = ComplementaryFilter(simimu,varargin)
 % simimu.gyronoisestd
 % simimu.gyrobiasdriftstd
 % simimu.accnoisestd
+global simimulocal
 
     % Setup
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
 window =2001;
 simimu.acc = movmean(simimu.acc * 9.81, window);
+simimulocal = simimu;
 
     % Method
         % for each time step, calculate yaw
@@ -82,6 +84,8 @@ if(not(isempty(varargin)))
     end
 end
 
+gamma = fminunc(@error, .3);
+
 end
 
 function [angle] = accToAngle(ax, ay, az)
@@ -89,4 +93,21 @@ function [angle] = accToAngle(ax, ay, az)
     angle.pitch = atan(ax/sqrt(ay * ay + (az) * (az))); % float pitch = atan(xAxis/sqrt(pow(yAxis,2) + pow(zAxis,2)));
 %     angle.pitch = asin(ax/sqrt(ax * ax + az * az));
     angle.roll = atan2(ay , az);
+end
+
+function error = error(gamma)
+    global simimulocal
+    error = 0;
+    pitchlocal = zeros(size(simimulocal.t));
+    for ii = 1:size(simimulocal.t)
+        pitchGyro =  simimulocal.gyro(ii, 2) * simimulocal.sampfreq; % integrate
+        if abs(simimulocal.acc(ii, 2)) < .981  % y acc threshhold
+            pitchAcc = accToAngle(simimulocal.acc(ii, 1), simimulocal.acc(ii, 2), simimulocal.acc(ii, 3) ); 
+            pitchlocal(ii) = pitchAcc.pitch * gamma + pitchGyro * (1-gamma);
+        else
+            pitchlocal(ii) = pitchGyro;
+        end
+        error = error + (abs( (simimulocal.truegyro(ii,2) * simimulocal.sampfreq) - pitchlocal(ii) ));
+    end
+%     disp(error);
 end
