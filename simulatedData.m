@@ -107,15 +107,15 @@ simimu.accnoisestd = accel.noisestd;
 f2 = figure('Name','Gyro Error');          %New fig
 set(f2, 'Position', [500, 100, 1049, 895]);
 
-% Plot Gyro Error
-plot(time, (rad2deg(Omega_Sensor) - rad2deg(transpose(simimu.gyro))));
-title('Gyro Error: (Ideal Gyroscope Readings) - (Simulated Readings)');
-legend('Roll Sensor', 'Pitch Sensor', 'Yaw Sensor')
-xlabel('time (seconds)'); ylabel('degrees/sec');
+% % Plot Gyro Error
+% plot(time, (rad2deg(Omega_Sensor) - rad2deg(transpose(simimu.gyro))));
+% title('Gyro Error: (Ideal Gyroscope Readings) - (Simulated Readings)');
+% legend('Roll Sensor', 'Pitch Sensor', 'Yaw Sensor')
+% xlabel('time (seconds)'); ylabel('degrees/sec');
 
 
-f = figure('Name','Simulated Sensor Data'); %New fig
-set(f, 'Position', [100, 100, 1049, 895]);
+% f = figure('Name','Simulated Sensor Data'); %New fig
+% set(f, 'Position', [100, 100, 1049, 895]);
 
 % Plot Gyroscope
 subplot(2,2,1)
