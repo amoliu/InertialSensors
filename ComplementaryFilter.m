@@ -34,10 +34,13 @@ simimulocal = simimu;
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
         % vary gamma (optimization below)
-gamma = .6; % .02
+gamma = .5; % .02
 pitch = zeros(size(time));
 pitchAccM = zeros(size(time));
-pitchGyro =  cumtrapz(simimu.gyro(:, 2)) * simimu.sampfreq;
+pitchGyro =  cumtrapz(time, simimu.gyro(:, 2)) ;
+% Vreading = bias + V
+% Xreading = Vreading*t = bias*t + V*t = bias*t + x
+% Bias*t = your line drift that you seem to see on your red graph and x is the oscillation around it.
 
 for ii = 1:size(time)
     if abs(simimu.acc(ii, 2)) < .981  % y acc threshhold
@@ -54,7 +57,7 @@ f = figure('Name','Pitch vs. Time'); %New fig
 set(f, 'Position', [100, 100, 1049, 895]);
 
 subplot(2,2,1);
-plot(time, cumtrapz(simimu.gyro(:,2))* simimu.sampfreq, time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq); % integral of omega     vel = cumtrapz(acc) * dT + v0
+plot(time, cumtrapz(time, simimu.gyro(:,2)), time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq); % integral of omega     vel = cumtrapz(acc) * dT + v0
 title('Pitch');
 legend('IMU Data')
 xlabel('time (seconds)'); ylabel('radians');
@@ -84,7 +87,7 @@ if(not(isempty(varargin)))
     end
 end
 
-gamma = fminunc(@error, .3);
+% gamma = fminunc(@error, .3);
 
 end
 
@@ -99,15 +102,15 @@ function error = error(gamma)
     global simimulocal
     error = 0;
     pitchlocal = zeros(size(simimulocal.t));
+    pitchGyro =  cumtrapz(simimulocal.gyro(:, 2)) * simimulocal.sampfreq;
+
     for ii = 1:size(simimulocal.t)
-        pitchGyro =  simimulocal.gyro(ii, 2) * simimulocal.sampfreq; % integrate
         if abs(simimulocal.acc(ii, 2)) < .981  % y acc threshhold
             pitchAcc = accToAngle(simimulocal.acc(ii, 1), simimulocal.acc(ii, 2), simimulocal.acc(ii, 3) ); 
-            pitchlocal(ii) = pitchAcc.pitch * gamma + pitchGyro * (1-gamma);
+            pitchlocal(ii) = pitchAcc.pitch * gamma + pitchGyro(ii) * (1-gamma);
         else
-            pitchlocal(ii) = pitchGyro;
+            pitchlocal(ii) = pitchGyro(ii);
         end
-        error = error + (abs( (simimulocal.truegyro(ii,2) * simimulocal.sampfreq) - pitchlocal(ii) ));
+        error = error + abs( cumtrapz(simimulocal.truegyro(ii,2)) * simimulocal.sampfreq - pitchlocal(ii) );
     end
-%     disp(error);
 end
