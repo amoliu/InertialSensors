@@ -25,8 +25,8 @@ global simimulocal
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
 simimu.acc = simimu.acc * 9.81;
-% window =21;
-% simimu.acc = movmean(simimu.acc, window);
+window =301;
+simimu.acc = movmean(simimu.acc, window);
 simimulocal = simimu;
 
     % Method
@@ -35,23 +35,41 @@ simimulocal = simimu;
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
         % vary gamma (optimization below)
-gamma = .5; % .02
+gamma = .8; % .02
 gyroBias = .025;
 gyroOffset = .03;
 pitch = zeros(size(time));
-pitchGyro =  cumtrapz(simimu.gyro(:, 2)) * simimu.sampfreq ;
 % Vreading = bias + V
 % Xreading = Vreading*t = bias*t + V*t = bias*t + x
 % Bias*t = your line drift that you seem to see on your red graph and x is the oscillation around it.
-
+pitchPrev = 0;
 for ii = 1:size(time)
-    if abs(simimu.acc(ii, 2)) < .981  % y acc threshhold
-        pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) ); 
-        pitch(ii) = pitchAcc.pitch * gamma + pitchGyro(ii) * (1-gamma);
-    else
-        pitch(ii) = pitchGyro(ii);
+    pitch(ii) = pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq;
+    if abs(simimu.acc(ii, 3)) < .981  % z acc threshhold, compensate for drift
+        pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
+        pitch(ii) = pitchAcc.pitch * gamma + pitch(ii) * (1-gamma);
     end
+    pitchPrev = pitch(ii);
 end
+
+% void ComplementaryFilter(short accData[3], short gyrData[3], float *pitch, float *roll)
+% {
+%     float pitchAcc, rollAcc;               
+%  
+%     // Integrate the gyroscope data -> int(angularSpeed) = angle
+%     *pitch += ((float)gyrData[0] / GYROSCOPE_SENSITIVITY) * dt; // Angle around the X-axis
+%  
+%     // Compensate for drift with accelerometer data if !bullshit
+%     // Sensitivity = -2 to 2 G at 16Bit -> 2G = 32768 && 0.5G = 8192
+%     int forceMagnitudeApprox = abs(accData[0]) + abs(accData[1]) + abs(accData[2]);
+%     if (forceMagnitudeApprox > 8192 && forceMagnitudeApprox < 32768)
+%     {
+% 	// Turning around the X axis results in a vector on the Y-axis
+%         pitchAcc = atan2f((float)accData[1], (float)accData[2]) * 180 / M_PI;
+%         *pitch = *pitch * 0.98 + pitchAcc * 0.02;
+%     }
+% } 
+
     % Plot
 f = figure('Name','Pitch vs. Time'); %New fig
 set(f, 'Position', [100, 100, 1049, 895]);
