@@ -24,8 +24,9 @@ global simimulocal
     % Setup
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
-% window =201;
-% simimu.acc = movmean(simimu.acc * 9.81, window);
+simimu.acc = simimu.acc * 9.81;
+% window =21;
+% simimu.acc = movmean(simimu.acc, window);
 simimulocal = simimu;
 
     % Method
@@ -35,9 +36,10 @@ simimulocal = simimu;
         
         % vary gamma (optimization below)
 gamma = .5; % .02
+gyroBias = .025;
+gyroOffset = .03;
 pitch = zeros(size(time));
-pitchAccM = zeros(size(time));
-pitchGyro =  cumtrapz(time, simimu.gyro(:, 2)) ;
+pitchGyro =  cumtrapz(simimu.gyro(:, 2)) * simimu.sampfreq ;
 % Vreading = bias + V
 % Xreading = Vreading*t = bias*t + V*t = bias*t + x
 % Bias*t = your line drift that you seem to see on your red graph and x is the oscillation around it.
@@ -46,10 +48,8 @@ for ii = 1:size(time)
     if abs(simimu.acc(ii, 2)) < .981  % y acc threshhold
         pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) ); 
         pitch(ii) = pitchAcc.pitch * gamma + pitchGyro(ii) * (1-gamma);
-        pitchAccM(ii) = pitchAcc.pitch;
     else
         pitch(ii) = pitchGyro(ii);
-        pitchAccM(ii) = 0;
     end
 end
     % Plot
@@ -57,8 +57,8 @@ f = figure('Name','Pitch vs. Time'); %New fig
 set(f, 'Position', [100, 100, 1049, 895]);
 
 subplot(2,2,1);
-plot(time, cumtrapz(time, simimu.gyro(:,2)), time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq); % integral of omega     vel = cumtrapz(acc) * dT + v0
-title('Pitch');
+plot(time, cumtrapz(simimu.gyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset , time, cumtrapz(time, simimu.truegyro(:,2)) + gyroBias * time - gyroOffset); % integral of omega     vel = cumtrapz(acc) * dT + v0
+title('Pitch'); % should be magnitude .09 radians
 legend('IMU Data')
 xlabel('time (seconds)'); ylabel('radians');
 
@@ -69,7 +69,7 @@ legend('Error')
 xlabel('time (seconds)'); ylabel('radians');
 
 subplot(2,2,3);
-plot(time, pitch, time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq);
+plot(time, pitch, time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset);
 title('Complementary Filter Pitch');
 legend('Complementary Filter')
 xlabel('time (seconds)'); ylabel('radians');
