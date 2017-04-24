@@ -25,8 +25,8 @@ global simimulocal
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
 simimu.acc = simimu.acc * 9.81;
-window =301;
-simimu.acc = movmean(simimu.acc, window);
+% window =301;
+% simimu.acc = movmean(simimu.acc, window);
 simimulocal = simimu;
 
     % Method
@@ -35,7 +35,7 @@ simimulocal = simimu;
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
         % vary gamma (optimization below)
-gamma = .8; % .02
+gamma = .02; % .02
 gyroBias = .025;
 gyroOffset = .03;
 pitch = zeros(size(time));
@@ -45,7 +45,7 @@ pitch = zeros(size(time));
 pitchPrev = 0;
 for ii = 1:size(time)
     pitch(ii) = pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq;
-    if abs(simimu.acc(ii, 3)) < .981  % z acc threshhold, compensate for drift
+    if abs(simimu.acc(ii, 3)) < 9.81  % z acc threshhold, compensate for drift
         pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
         pitch(ii) = pitchAcc.pitch * gamma + pitch(ii) * (1-gamma);
     end
@@ -77,7 +77,7 @@ set(f, 'Position', [100, 100, 1049, 895]);
 subplot(2,2,1);
 plot(time, cumtrapz(simimu.gyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset , time, cumtrapz(time, simimu.truegyro(:,2)) + gyroBias * time - gyroOffset); % integral of omega     vel = cumtrapz(acc) * dT + v0
 title('Pitch'); % should be magnitude .09 radians
-legend('IMU Data')
+legend('IMU Gyro Data')
 xlabel('time (seconds)'); ylabel('radians');
 
 subplot(2,2,2);
@@ -105,7 +105,7 @@ if(not(isempty(varargin)))
     end
 end
 
-% gamma = fminunc(@error, .3);
+gamma = fminunc(@error, .3);
 
 end
 
