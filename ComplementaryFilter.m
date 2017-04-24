@@ -19,7 +19,7 @@ function gamma = ComplementaryFilter(simimu,varargin)
 % simimu.gyronoisestd
 % simimu.gyrobiasdriftstd
 % simimu.accnoisestd
-global simimulocal
+global simimulocal gyroBias gyroOffset
 
     % Setup
         % Plot imu data (via simulatedData.m)
@@ -34,7 +34,7 @@ simimulocal = simimu;
             % if a is above a threshold, use gyro data
         % angle = gamma * (angle + gyroData * dt) + (1-gamma) * accelData
         
-        % vary gamma (optimization below)
+        % vary gamma (optimization below - needs to be constrained)
 gamma = .02; % .02
 gyroBias = .025;
 gyroOffset = .03;
@@ -44,7 +44,7 @@ pitch = zeros(size(time));
 % Bias*t = your line drift that you seem to see on your red graph and x is the oscillation around it.
 pitchPrev = 0;
 for ii = 1:size(time)
-    pitch(ii) = pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq;
+    pitch(ii) = pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq ;%+ .000005 * time(ii);
     if abs(simimu.acc(ii, 3)) < 9.81  % z acc threshhold, compensate for drift
         pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
         pitch(ii) = pitchAcc.pitch * gamma + pitch(ii) * (1-gamma);
@@ -87,13 +87,13 @@ legend('Error')
 xlabel('time (seconds)'); ylabel('radians');
 
 subplot(2,2,3);
-plot(time, pitch, time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset);
+plot(time+.17, pitch , time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset);
 title('Complementary Filter Pitch');
 legend('Complementary Filter')
 xlabel('time (seconds)'); ylabel('radians');
 
 subplot(2,2,4);
-plot(time, abs( cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq - pitch ));
+plot(time, abs( cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset - pitch ));
 title('Complementary Filter Pitch Error (abs. val.)');
 legend('Error')
 xlabel('time (seconds)'); ylabel('radians');
@@ -105,7 +105,8 @@ if(not(isempty(varargin)))
     end
 end
 
-gamma = fminunc(@error, .3);
+gamma = fminbnd(@error, .01, .1);
+% gamma = fminunc(@error, .05);
 
 end
 
@@ -117,18 +118,17 @@ function [angle] = accToAngle(ax, ay, az)
 end
 
 function error = error(gamma)
-    global simimulocal
+    global simimulocal gyroBias gyroOffset
     error = 0;
     pitchlocal = zeros(size(simimulocal.t));
-    pitchGyro =  cumtrapz(simimulocal.gyro(:, 2)) * simimulocal.sampfreq;
-
+    pitchPrev = 0;
     for ii = 1:size(simimulocal.t)
-        if abs(simimulocal.acc(ii, 2)) < .981  % y acc threshhold
-            pitchAcc = accToAngle(simimulocal.acc(ii, 1), simimulocal.acc(ii, 2), simimulocal.acc(ii, 3) ); 
-            pitchlocal(ii) = pitchAcc.pitch * gamma + pitchGyro(ii) * (1-gamma);
-        else
-            pitchlocal(ii) = pitchGyro(ii);
+        pitchlocal(ii) = pitchPrev + simimulocal.gyro(ii,2) * simimulocal.sampfreq;
+        if abs(simimulocal.acc(ii, 3)) < 9.81  % z acc threshhold, compensate for drift
+            pitchAcc = accToAngle(simimulocal.acc(ii, 1), simimulocal.acc(ii, 2), simimulocal.acc(ii, 3) );
+            pitchlocal(ii) = pitchAcc.pitch * gamma + pitchlocal(ii) * (1-gamma);
         end
-        error = error + abs( cumtrapz(simimulocal.truegyro(ii,2)) * simimulocal.sampfreq - pitchlocal(ii) );
+        pitchPrev = pitchlocal(ii);
+        error = error + abs( cumtrapz(simimulocal.truegyro(ii,2)) * simimulocal.sampfreq + gyroBias * simimulocal.t(ii) - gyroOffset - pitchlocal(ii) );
     end
 end
