@@ -25,8 +25,8 @@ global simimulocal gyroBias gyroOffset
         % Plot imu data (via simulatedData.m)
 time = simimu.t;
 simimu.acc = simimu.acc * 9.81;
-% window =301;
-% simimu.acc = movmean(simimu.acc, window);
+window =100;
+simimu.acc = movmean(simimu.acc, window);
 simimulocal = simimu;
 
     % Method
@@ -39,15 +39,13 @@ gamma = .02; % .02
 gyroBias = .025;
 gyroOffset = .03;
 pitch = zeros(size(time));
-% Vreading = bias + V
-% Xreading = Vreading*t = bias*t + V*t = bias*t + x
-% Bias*t = your line drift that you seem to see on your red graph and x is the oscillation around it.
+
 pitchPrev = 0;
 for ii = 1:size(time)
     pitch(ii) = pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq ;%+ .000005 * time(ii);
     if abs(simimu.acc(ii, 3)) < 9.81  % z acc threshhold, compensate for drift
         pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
-        pitch(ii) = pitchAcc.pitch * gamma + pitch(ii) * (1-gamma);
+        pitch(ii) = pitchAcc.pitch * 10 * gamma + pitch(ii) * (1-gamma);
     end
     pitchPrev = pitch(ii);
 end
