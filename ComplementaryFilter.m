@@ -1,5 +1,5 @@
 % Will Conlin, 4/11/17
-% Madgwick Complementary Filter
+% Complementary Filter
 % Inputs: Simulated IMU data
 % Models: State dynamics, error, complementary filter
 % Units: m/s^2 and radians

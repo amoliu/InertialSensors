@@ -4,7 +4,7 @@
 % Models: State dynamics, error, complementary filter
 % Units: m/s^2 and radians
 % Instructions: A call would look like:
-%   ComplementaryFilter(simulatedData(5,1)) where the 1 is to close plots
+%   Madgwick(simulatedData(5,1)) where the 1 is to close plots
 
 function gamma = Madgwick(simimu,varargin)
 % simimu.Qgyro
@@ -40,6 +40,7 @@ gyroBias = .025;
 gyroOffset = .03;
 pitch = zeros(size(time));
 gamma =  zeros(size(time));
+pitchAcc = zeros(size(time));
 
 % normA = simimu.acc(:, 3) - min(simimu.acc(:, 3));
 % normA = normA ./ max(normA(:));
@@ -48,13 +49,14 @@ pitchPrev=0;
 
 for ii = 1:size(time)
     gamma(ii) = abs(-9.8 - simimu.acc(ii, 3)) * 6; % 9.6 to 10 so abs(9.8 - simimu.acc(ii, 3)) * 5 0 to .2
-%     gamma(ii) = 0;
-    pitchAcc = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
-    pitch(ii) = pitchAcc.pitch *15 * (1-gamma(ii)) + (pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq )* gamma(ii);
+    pitchAcc(ii) = accToAngle(simimu.acc(ii, 1), simimu.acc(ii, 2), simimu.acc(ii, 3) );
+    pitch(ii) = ( .2 * (simimu.acc(ii,3) + 9.74)) * (1-gamma(ii)) + (pitchPrev + simimu.gyro(ii,2) * simimu.sampfreq )* gamma(ii);
     pitchPrev = pitch(ii);
 end
 
-% plot(gamma);
+% plot(.02 * sin(time*6));
+% plot (simimu.acc(:,3));
+plot (pitchAcc);
 
     % Plot
 f = figure('Name','Pitch vs. Time'); %New fig
@@ -72,10 +74,10 @@ title('Pitch Gyro Error (abs. val.)');
 legend('Error')
 xlabel('time (seconds)'); ylabel('radians');
 
-pitchSmooth = sgolayfilt(pitch, 5, 501);
+pitchSmooth = pitch;% sgolayfilt(pitch, 5, 501);
 
 subplot(2,2,3);
-plot(time+.17, pitchSmooth , time-.17, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset);
+plot(time, pitchSmooth , time, cumtrapz(simimu.truegyro(:,2)) * simimu.sampfreq + gyroBias * time - gyroOffset);
 title('Complementary Filter Pitch');
 legend('Complementary Filter')
 xlabel('time (seconds)'); ylabel('radians');
@@ -98,14 +100,12 @@ end
 
 end
 
-function [angle] = accToAngle(ax, ay, az)
-%     if (9.81 > abs(az) && abs(az)> 9) %low acceleration
-%         angle.pitch = acos(abs(az)/9.81);
-%     else
-    angle.pitch = atan(ax/sqrt(ay * ay + az * az));
+function [pitchAcc] = accToAngle(ax, ay, az)
+    pitchAcc = acos(abs(az)/9.81);
+%     pitchAcc = atan(ax/sqrt(ay * ay + az * az));
 %     end
 %     angle.pitch = asin(ax/sqrt(ax * ax + az * az));
-    angle.roll = atan2(ay , az);
+%     angle.roll = atan2(ay , az);
 end
 
 function error = error(gamma)
