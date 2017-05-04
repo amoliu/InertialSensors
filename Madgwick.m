@@ -56,7 +56,7 @@ end
 
 % plot(.02 * sin(time*6));
 % plot (simimu.acc(:,3));
-plot (pitchAcc);
+% plot (pitchAcc);
 
     % Plot
 f = figure('Name','Pitch vs. Time'); %New fig
@@ -101,8 +101,8 @@ end
 end
 
 function [pitchAcc] = accToAngle(ax, ay, az)
-    pitchAcc = acos(abs(az)/9.81);
-%     pitchAcc = atan(ax/sqrt(ay * ay + az * az));
+%     pitchAcc = acos(abs(az)/9.81);
+    pitchAcc = atan(ax/sqrt(ay * ay + az * az));
 %     end
 %     angle.pitch = asin(ax/sqrt(ax * ax + az * az));
 %     angle.roll = atan2(ay , az);
